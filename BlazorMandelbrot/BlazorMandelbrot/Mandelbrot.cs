@@ -1,6 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
-namespace BlazorMandelbrot.Pages
+namespace BlazorMandelbrot
 {
     public class Mandelbrot
     {
@@ -9,10 +9,10 @@ namespace BlazorMandelbrot.Pages
         private readonly double _xMin = -2.0;
         private readonly double _xMax = 2.0;
         private readonly int[] _colours;
-        private readonly int _black = (255 << 24) |    // alpha
-                                (0 << 16) |    // blue
-                                (0 << 8) |    // green
-                                (0);          // red
+        private readonly int _black = 255 << 24 |    // alpha
+                                0 << 16 |    // blue
+                                0 << 8 |    // green
+                                0;          // red
 
         private double _zoom = 0.01;
         private int _maxIterations = 200;
@@ -31,6 +31,13 @@ namespace BlazorMandelbrot.Pages
                 _colours[i] = ColorFromHSLA(hue, 0.9, 0.6);
             }
         }
+
+        public void Reset()
+        {
+            _zoom = 0.01;
+            _maxIterations = 200;
+        }
+
         public void RenderImage(ArraySegment<int> data, int width, int height, bool highResolution = false)
         {
             _zoom *= 0.9;
@@ -38,12 +45,12 @@ namespace BlazorMandelbrot.Pages
 
             var RX1 = _px - _zoom / 2;
             var RY1 = _py - _zoom / 2;
-            var dRx = (_px + _zoom / 2) - RX1;
-            var dRy = (_py + _zoom / 2) - RY1;
+            var dRx = _px + _zoom / 2 - RX1;
+            var dRy = _py + _zoom / 2 - RY1;
 
             var xyPixelStep = highResolution ? 1 : 4;
-            var xStep = (_xMax - _xMin) / (width) * xyPixelStep;
-            var yStep = (_yMax - _yMin) / (height) * xyPixelStep;
+            var xStep = (_xMax - _xMin) / width * xyPixelStep;
+            var yStep = (_yMax - _yMin) / height * xyPixelStep;
 
             var yPix = 0;
             for (var y = _yMin; y < _yMax; y += yStep)
@@ -76,7 +83,11 @@ namespace BlazorMandelbrot.Pages
                     {
                         for (int pY = 0; pY < xyPixelStep; pY++)
                         {
-                            data[(yPix + pY) * width + (xPix + pX)] = color;
+                            var p = (yPix + pY) * width + xPix + pX;
+                            if (p < data.Count)
+                            {
+                                data[p] = color;
+                            }
                         }
                     }
 
@@ -96,7 +107,7 @@ namespace BlazorMandelbrot.Pages
             g = L;
             b = L;
 
-            v = (L <= 0.5) ? (L * (1.0 + S)) : (L + S - L * S);
+            v = L <= 0.5 ? L * (1.0 + S) : L + S - L * S;
 
             if (v > 0)
             {
@@ -154,11 +165,10 @@ namespace BlazorMandelbrot.Pages
                 }
             }
 
-            return (255 << 24) |                // alpha
-                    ((int)(b * 255) << 16) |    // blue
-                    ((int)(g * 255) << 8) |    // green
+            return 255 << 24 |                // alpha
+                    (int)(b * 255) << 16 |    // blue
+                    (int)(g * 255) << 8 |    // green
                     (int)(r * 255);             // red
         }
     }
-
 }

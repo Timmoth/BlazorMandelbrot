@@ -9,26 +9,23 @@ namespace BlazorMandelbrot.Pages
         protected int Width => 400;
         protected int Height => 400;
 
-        private readonly ArraySegment<int> _data;
+        private ArraySegment<int> _data;
 
         private readonly Mandelbrot _mandelbrot = new();
 
-        public MandelbrotCpuBase()
-        {
-            _data = new int[Width * Height];
-        }
-
         protected override async Task OnInitializedAsync()
         {
-            using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(15));
 
             while (Canvas is not { Ready: true })
             {
                 await Task.Delay(10);
             }
 
+            _data = new int[Width * Height];
+
             Canvas.SetImageBuffer(_data);
 
+            using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(15));
             while (await timer.WaitForNextTickAsync())
             {
                 _mandelbrot.RenderImage(_data, Width, Height, HighResolution);
